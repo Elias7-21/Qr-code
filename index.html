@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Elias QR Code Generator</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- QRCode.js Library for client-side rendering -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Google Fonts: Newsreader (Serif) & Inter (Sans) for elias typography vibe -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Warm, organic color palette inspired by elias / Claude */
+    :root {
+      --bg-warm: #FAF7F2;
+      --card-bg: #FFFFFF;
+      --border-subtle: #E2DBD0;
+      --border-hover: #C5BCB0;
+      --text-primary: #1C1A17;
+      --text-muted: #6B655C;
+      --accent-terracotta: #576bd9;
+      --accent-terracotta-hover: #4476c2;
+      --input-bg: #FCFAF7;
+    }
+
+    body {
+      background-color: var(--bg-warm);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .font-serif-claude {
+      font-family: 'Newsreader', Georgia, serif;
+    }
+
+    /* Subtle shadow and border styling */
+    .claude-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 4px 20px -2px rgba(28, 26, 23, 0.04);
+    }
+
+    .claude-input {
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+    }
+
+    .claude-input:focus {
+      outline: none;
+      border-color: var(--accent-terracotta);
+      box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.15);
+    }
+
+    .claude-btn-primary {
+      background-color: var(--accent-terracotta);
+      color: #FFFFFF;
+      transition: all 0.2s ease;
+    }
+
+    .claude-btn-primary:hover {
+      background-color: var(--accent-terracotta-hover);
+    }
+
+    .claude-btn-secondary {
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+    }
+
+    .claude-btn-secondary:hover {
+      border-color: var(--border-hover);
+      background-color: #F5F0EB;
+    }
+
+    /* Custom color input container */
+    .color-picker-wrapper {
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+    }
+
+    .color-picker-wrapper input[type="color"] {
+      position: absolute;
+      right: -10px;
+      top: -10px;
+      width: 50px;
+      height: 50px;
+      border: none;
+      cursor: pointer;
+      opacity: 0;
+    }
+
+    /* QR Output center alignment */
+    #qrcode canvas, #qrcode img {
+      margin: 0 auto;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
+
+  <!-- Main Container -->
+  <main class="w-full max-w-lg claude-card rounded-2xl p-6 sm:p-10 space-y-8">
+    
+    <!-- Title & Subtitle Header -->
+    <header class="text-center space-y-2">
+      <h1 class="text-3xl font-serif-claude tracking-tight font-normal text-[#1C1A17]">
+        QR Code Generator
+      </h1>
+      <p class="text-sm text-[#6B655C] max-w-xs mx-auto font-normal">
+        Clean, simple link conversion with customizable warm tones.
+      </p>
+    </header>
+
+    <!-- Inputs & Customization Controls -->
+    <section class="space-y-5">
+      
+      <!-- Link / Text Input -->
+      <div class="space-y-1.5">
+        <label for="text-input" class="block text-xs font-medium tracking-wide uppercase text-[#6B655C]">
+          Destination URL or Text
+        </label>
+        <input 
+          type="text" 
+          id="text-input" 
+          placeholder="https://example.com" 
+          value="https://elias.com"
+          class="w-full px-4 py-3 rounded-xl claude-input text-sm placeholder-[#9C958A]"
+        />
+      </div>
+
+      <!-- Color Controls Grid -->
+      <div class="grid grid-cols-2 gap-4">
+        
+        <!-- Foreground Color (Dots) -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-medium tracking-wide uppercase text-[#6B655C]">
+            Pattern Color
+          </label>
+          <div class="flex items-center justify-between px-3 py-2.5 rounded-xl claude-input color-picker-wrapper cursor-pointer">
+            <div class="flex items-center gap-2.5">
+              <span id="fg-preview" class="w-5 h-5 rounded-full border border-black/10 inline-block" style="background-color: #1C1A17;"></span>
+              <span id="fg-hex" class="text-xs font-mono font-medium text-[#1C1A17]">#1C1A17</span>
+            </div>
+            <input type="color" id="fg-color" value="#1C1A17" class="cursor-pointer">
+            <svg class="w-4 h-4 text-[#6B655C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </div>
+        </div>
+
+        <!-- Background Color -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-medium tracking-wide uppercase text-[#6B655C]">
+            Background
+          </label>
+          <div class="flex items-center justify-between px-3 py-2.5 rounded-xl claude-input color-picker-wrapper cursor-pointer">
+            <div class="flex items-center gap-2.5">
+              <span id="bg-preview" class="w-5 h-5 rounded-full border border-black/10 inline-block" style="background-color: #FAF7F2;"></span>
+              <span id="bg-hex" class="text-xs font-mono font-medium text-[#1C1A17]">#FAF7F2</span>
+            </div>
+            <input type="color" id="bg-color" value="#FAF7F2" class="cursor-pointer">
+            <svg class="w-4 h-4 text-[#6B655C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Quick Preset Buttons -->
+      <div class="pt-1">
+        <span class="block text-xs font-medium tracking-wide uppercase text-[#6B655C] mb-2">Presets</span>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="setColors('#1C1A17', '#FAF7F2')" class="px-3 py-1.5 text-xs rounded-lg claude-btn-secondary">Warm Sand</button>
+          <button onclick="setColors('#D97757', '#FFFFFF')" class="px-3 py-1.5 text-xs rounded-lg claude-btn-secondary">Terracotta</button>
+          <button onclick="setColors('#1C1A17', '#FFFFFF')" class="px-3 py-1.5 text-xs rounded-lg claude-btn-secondary">Pure Mono</button>
+          <button onclick="setColors('#2C3B32', '#F4F6F4')" class="px-3 py-1.5 text-xs rounded-lg claude-btn-secondary">Sage</button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Output Display Area -->
+    <section class="flex flex-col items-center justify-center pt-2">
+      <div class="p-6 rounded-2xl bg-[#FCFAF7] border border-[#E2DBD0] w-full max-w-[240px] flex items-center justify-center min-h-[220px]">
+        <div id="qrcode" class="p-1"></div>
+      </div>
+    </section>
+
+    <!-- Download Action Button -->
+    <section class="space-y-3">
+      <button 
+        onclick="downloadQR()" 
+        class="w-full py-3.5 px-4 rounded-xl claude-btn-primary font-medium text-sm flex items-center justify-center gap-2 shadow-sm"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+        </svg>
+        <span>Download QR Code (PNG)</span>
+      </button>
+      
+      <!-- Notification Banner -->
+      <div id="toast" class="opacity-0 transition-opacity duration-300 text-center text-xs text-[#6B655C] py-1">
+        Downloaded successfully!
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="mt-8 text-center text-xs text-[#9C958A]">
+    
+  </footer>
+
+  <script>
+    // DOM Element References
+    const textInput = document.getElementById('text-input');
+    const fgColorInput = document.getElementById('fg-color');
+    const bgColorInput = document.getElementById('bg-color');
+    const fgHex = document.getElementById('fg-hex');
+    const bgHex = document.getElementById('bg-hex');
+    const fgPreview = document.getElementById('fg-preview');
+    const bgPreview = document.getElementById('bg-preview');
+    const qrContainer = document.getElementById('qrcode');
+    const toast = document.getElementById('toast');
+
+    let qrCodeInstance = null;
+
+    // Generate QR Code on load
+    window.onload = function() {
+      generateQRCode();
+
+      // Event Listeners for live real-time updates
+      textInput.addEventListener('input', generateQRCode);
+      
+      fgColorInput.addEventListener('input', (e) => {
+        updateColorUI(e.target.value, fgHex, fgPreview);
+        generateQRCode();
+      });
+
+      bgColorInput.addEventListener('input', (e) => {
+        updateColorUI(e.target.value, bgHex, bgPreview);
+        generateQRCode();
+      });
+    };
+
+    // Helper to sync color inputs with UI previews
+    function updateColorUI(hexValue, hexTextElement, previewElement) {
+      const upperHex = hexValue.toUpperCase();
+      hexTextElement.textContent = upperHex;
+      previewElement.style.backgroundColor = upperHex;
+    }
+
+    // Set colors from preset buttons
+    function setColors(fg, bg) {
+      fgColorInput.value = fg;
+      bgColorInput.value = bg;
+      updateColorUI(fg, fgHex, fgPreview);
+      updateColorUI(bg, bgHex, bgPreview);
+      generateQRCode();
+    }
+
+    // Main QR Code Generation Logic
+    function generateQRCode() {
+      const text = textInput.value.trim() || "https://elias.com";
+      
+      // Clear previous instance
+      qrContainer.innerHTML = "";
+
+      // Create new QR Code
+      qrCodeInstance = new QRCode(qrContainer, {
+        text: text,
+        width: 180,
+        height: 180,
+        colorDark: fgColorInput.value,
+        colorLight: bgColorInput.value,
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
+
+    // Image Download Handler
+    function downloadQR() {
+      const canvas = qrContainer.querySelector('canvas');
+      const img = qrContainer.querySelector('img');
+      
+      let imageSrc = "";
+
+      if (canvas) {
+        imageSrc = canvas.toDataURL("image/png");
+      } else if (img && img.src) {
+        imageSrc = img.src;
+      }
+
+      if (!imageSrc) {
+        showToast("Please enter text or a link first.");
+        return;
+      }
+
+      // Create temporary download link
+      const link = document.createElement('a');
+      link.href = imageSrc;
+      link.download = `qrcode-${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showToast("Downloaded QR code successfully!");
+    }
+
+    // Simple Toast Utility
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.remove('opacity-0');
+      toast.classList.add('opacity-100');
+      
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0');
+      }, 2500);
+    }
+  </script>
+</body>
+</html>
