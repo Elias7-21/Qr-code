@@ -3,325 +3,350 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>QR Code Generator</title>
+  <title>Elias QR Code Generator</title>
+  
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- QRCode.js Library -->
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- QRCode.js Library for client-side rendering -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Google Fonts: Newsreader (Serif) & Inter (Sans) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+  
   <style>
     :root {
-      --bg: #fbf9f5;
-      --card-bg: #ffffff;
-      --text: #1d1c1a;
-      --muted: #6e6d6a;
-      --border: #e6e4df;
-      --accent: #da7756; /* Claude Clay accent */
-      --accent-hover: #c46445;
-      --radius: 12px;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --bg-warm: #FAF7F2;
+      --card-bg: #FFFFFF;
+      --border-subtle: #E2DBD0;
+      --border-hover: #C5BCB0;
+      --text-primary: #1C1A17;
+      --text-muted: #6B655C;
+      --accent-terracotta: #576bd9;
+      --accent-terracotta-hover: #4476c2;
+      --input-bg: #FCFAF7;
     }
 
     body {
-      background-color: var(--bg);
-      color: var(--text);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
+      background-color: var(--bg-warm);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    .container {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px;
-      width: 100%;
-      max-width: 380px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    .font-serif-claude {
+      font-family: 'Newsreader', Georgia, serif;
     }
 
-    h1 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin-bottom: 6px;
-      text-align: center;
+    .claude-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 4px 20px -2px rgba(28, 26, 23, 0.04);
     }
 
-    p.subtitle {
-      font-size: 0.875rem;
-      color: var(--muted);
-      text-align: center;
-      margin-bottom: 24px;
+    .claude-input {
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      transition: all 0.2s ease;
     }
 
-    .form-group {
-      margin-bottom: 16px;
-    }
-
-    label {
-      display: block;
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: var(--muted);
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    input[type="text"],
-    input[type="url"] {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 0.95rem;
+    .claude-input:focus {
       outline: none;
-      background: #fafaf9;
-      transition: border-color 0.2s;
+      border-color: var(--accent-terracotta);
+      box-shadow: 0 0 0 3px rgba(87, 107, 217, 0.15);
     }
 
-    input[type="text"]:focus,
-    input[type="url"]:focus {
-      border-color: var(--accent);
-      background: #fff;
+    .claude-btn-primary {
+      background-color: var(--accent-terracotta);
+      color: #FFFFFF;
+      transition: all 0.2s ease;
     }
 
-    .color-picker-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 20px;
+    .claude-btn-primary:hover {
+      background-color: var(--accent-terracotta-hover);
     }
 
-    .color-picker {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border: 1px solid var(--border);
-      padding: 8px 12px;
+    .claude-btn-secondary {
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+    }
+
+    .claude-btn-secondary:hover {
+      border-color: var(--border-hover);
+      background-color: #F5F0EB;
+    }
+
+    .color-picker-wrapper {
+      position: relative;
+      overflow: hidden;
       border-radius: 8px;
-      background: #fafaf9;
     }
 
-    .color-picker input[type="color"] {
+    .color-picker-wrapper input[type="color"] {
+      position: absolute;
+      right: -10px;
+      top: -10px;
+      width: 50px;
+      height: 50px;
       border: none;
-      width: 24px;
-      height: 24px;
       cursor: pointer;
-      background: none;
+      opacity: 0;
     }
 
-    .color-picker span {
-      font-size: 0.85rem;
-      color: var(--text);
-    }
-
-    .btn {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #ffffff;
-    }
-
-    .btn-primary:hover {
-      background: var(--accent-hover);
-    }
-
-    .btn-secondary {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text);
-      margin-top: 10px;
-      display: none;
-    }
-
-    .btn-secondary:hover {
-      background: #f4f3ef;
-    }
-
-    #qrcode-container {
-      margin-top: 24px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 180px;
-      border-radius: 8px;
-      padding: 16px;
-      background: #fafaf9;
-      border: 1px dashed var(--border);
-    }
-
-    #qrcode img, #qrcode canvas {
-      max-width: 100%;
-      height: auto;
+    #qrcode canvas, #qrcode img {
+      margin: 0 auto;
       border-radius: 4px;
-    }
-
-    /* Modal for Telegram download preview */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.85);
-      z-index: 9999;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      padding: 20px;
-      text-align: center;
-    }
-
-    .modal img {
-      max-width: 80%;
-      border-radius: 12px;
-      background: white;
-      padding: 12px;
-      margin-bottom: 16px;
-    }
-
-    .modal p {
-      color: #ffffff;
-      font-size: 0.95rem;
-      margin-bottom: 20px;
-      line-height: 1.4;
-    }
-
-    .modal-close {
-      background: #ffffff;
-      color: #000000;
-      border: none;
-      padding: 10px 24px;
-      border-radius: 20px;
-      font-weight: 600;
-      cursor: pointer;
     }
   </style>
 </head>
-<body>
 
-  <div class="container">
-    <h1>QR Code Generator</h1>
-    <p class="subtitle">Enter a URL to generate your custom QR code</p>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
 
-    <div class="form-group">
-      <label for="urlInput">Destination URL</label>
-      <input type="url" id="urlInput" placeholder="https://example.com" />
-    </div>
+  <!-- Main Container -->
+  <main class="w-full max-w-lg claude-card rounded-2xl p-6 sm:p-10 space-y-8">
+    
+    <!-- Title & Subtitle Header -->
+    <header class="text-center space-y-2">
+      <h1 class="text-3xl font-serif-claude tracking-tight font-normal text-[#1C1A17]">
+        QR Code Generator
+      </h1>
+      <p class="text-sm text-[#6B655C] max-w-xs mx-auto font-normal">
+        Clean, simple link conversion with customizable warm tones.
+      </p>
+    </header>
 
-    <div class="color-picker-row">
-      <div class="color-picker">
-        <input type="color" id="darkColor" value="#1d1c1a" />
-        <span>Foreground</span>
+    <!-- Inputs & Customization Controls -->
+    <section class="space-y-5">
+      
+      <!-- Link / Text Input -->
+      <div class="space-y-1.5">
+        <label for="text-input" class="block text-xs font-medium tracking-wide uppercase text-[#6B655C]">
+          Destination URL or Text
+        </label>
+        <input 
+          type="text" 
+          id="text-input" 
+          placeholder="https://example.com" 
+          value="https://elias.com"
+          class="w-full px-4 py-3 rounded-xl claude-input text-sm placeholder-[#9C958A]"
+        />
       </div>
-      <div class="color-picker">
-        <input type="color" id="lightColor" value="#ffffff" />
-        <span>Background</span>
+
+      <!-- Color Controls Grid -->
+      <div class="grid grid-cols-2 gap-4">
+        
+        <!-- Foreground Color -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-medium tracking-wide uppercase text-[#6B655C]">
+            Pattern Color
+          </label>
+          <div class="flex items-center justify-between px-3 py-2.5 rounded-xl claude-input color-picker-wrapper cursor-pointer">
+            <div class="flex items-center gap-2.5">
+              <span id="fg-preview" class="w-5 h-5 rounded-full border border-black/10 inline-block" style="background-color: #1C1A17;"></span>
+              <span id="fg-hex" class="text-xs font-mono font-medium text-[#1C1A17]">#1C1A17</span>
+            </div>
+            <input type="color" id="fg-color" value="#1C1A17" class="cursor-pointer">
+            <svg class="w-4 h-4 text-[#6B655C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </div>
+        </div>
+
+        <!-- Background Color -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-medium tracking-wide uppercase text-[#6B655C]">
+            Background
+          </label>
+          <div class="flex items-center justify-between px-3 py-2.5 rounded-xl claude-input color-picker-wrapper cursor-pointer">
+            <div class="flex items-center gap-2.5">
+              <span id="bg-preview" class="w-5 h-5 rounded-full border border-black/10 inline-block" style="background-color: #FAF7F2;"></span>
+              <span id="bg-hex" class="text-xs font-mono font-medium text-[#1C1A17]">#FAF7F2</span>
+            </div>
+            <input type="color" id="bg-color" value="#FAF7F2" class="cursor-pointer">
+            <svg class="w-4 h-4 text-[#6B655C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </div>
+        </div>
+
       </div>
+
+      <!-- Quick Preset Buttons -->
+      <div class="pt-1">
+        <span class="block text-xs font-medium tracking-wide uppercase text-[#6B655C] mb-2">Presets</span>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="setColors('#1C1A17', '#FAF7F2')" class="px-3 py-1.5 text-xs rounded-lg claude-btn-secondary">Warm Sand</button>
+          <button onclick="setColors('#D97757', '#FFFFFF')" class="px-3 py-1.5 text-xs rounded-lg claude-btn-secondary">Terracotta</button>
+          <button onclick="setColors('#1C1A17', '#FFFFFF')" class="px-3 py-1.5 text-xs rounded-lg claude-btn-secondary">Pure Mono</button>
+          <button onclick="setColors('#2C3B32', '#F4F6F4')" class="px-3 py-1.5 text-xs rounded-lg claude-btn-secondary">Sage</button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Output Display Area -->
+    <section class="flex flex-col items-center justify-center pt-2">
+      <div class="p-6 rounded-2xl bg-[#FCFAF7] border border-[#E2DBD0] w-full max-w-[240px] flex items-center justify-center min-h-[220px]">
+        <div id="qrcode" class="p-1"></div>
+      </div>
+    </section>
+
+    <!-- Action Button & Notification -->
+    <section class="space-y-3">
+      <button 
+        onclick="downloadQR()" 
+        class="w-full py-3.5 px-4 rounded-xl claude-btn-primary font-medium text-sm flex items-center justify-center gap-2 shadow-sm"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+        </svg>
+        <span>Download QR Code (PNG)</span>
+      </button>
+      
+      <div id="toast" class="opacity-0 transition-opacity duration-300 text-center text-xs text-[#6B655C] py-1">
+        Generated successfully!
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Save Overlay Modal for Telegram / Mobile WebViews -->
+  <div id="save-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex-col items-center justify-center p-6 text-center">
+    <div class="claude-card max-w-sm w-full rounded-2xl p-6 space-y-4">
+      <h3 class="text-lg font-serif-claude text-[#1C1A17]">Save QR Code</h3>
+      <p class="text-xs text-[#6B655C]">Press and hold the image below to save it to your Photos or Gallery:</p>
+      
+      <div class="p-4 bg-[#FCFAF7] border border-[#E2DBD0] rounded-xl flex items-center justify-center">
+        <img id="modal-qr-img" src="" alt="QR Code Image" class="max-w-[200px] h-auto rounded" />
+      </div>
+
+      <button 
+        onclick="closeModal()" 
+        class="w-full py-2.5 rounded-xl claude-btn-secondary text-xs font-semibold"
+      >
+        Close
+      </button>
     </div>
-
-    <button class="btn btn-primary" onclick="generateQR()">Generate QR Code</button>
-
-    <div id="qrcode-container">
-      <div id="qrcode"></div>
-    </div>
-
-    <button id="downloadBtn" class="btn btn-secondary" onclick="downloadQR()">Download PNG</button>
-  </div>
-
-  <!-- Telegram Save Modal -->
-  <div id="telegramModal" class="modal">
-    <p><strong>Press and hold</strong> the QR code below to save it to your phone's gallery:</p>
-    <img id="modalQrImg" src="" alt="QR Code Preview" />
-    <button class="modal-close" onclick="closeModal()">Done</button>
   </div>
 
   <script>
-    // Initialize Telegram WebApp SDK if available
+    // Initialize Telegram SDK
     if (window.Telegram && window.Telegram.WebApp) {
       window.Telegram.WebApp.ready();
       window.Telegram.WebApp.expand();
     }
 
-    let qrcodeInstance = null;
+    // DOM References
+    const textInput = document.getElementById('text-input');
+    const fgColorInput = document.getElementById('fg-color');
+    const bgColorInput = document.getElementById('bg-color');
+    const fgHex = document.getElementById('fg-hex');
+    const bgHex = document.getElementById('bg-hex');
+    const fgPreview = document.getElementById('fg-preview');
+    const bgPreview = document.getElementById('bg-preview');
+    const qrContainer = document.getElementById('qrcode');
+    const toast = document.getElementById('toast');
+    const saveModal = document.getElementById('save-modal');
+    const modalQrImg = document.getElementById('modal-qr-img');
 
-    function generateQR() {
-      const url = document.getElementById("urlInput").value.trim();
-      const darkColor = document.getElementById("darkColor").value;
-      const lightColor = document.getElementById("lightColor").value;
-      const qrContainer = document.getElementById("qrcode");
-      const downloadBtn = document.getElementById("downloadBtn");
+    let qrCodeInstance = null;
 
-      if (!url) {
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.showAlert) {
-          window.Telegram.WebApp.showAlert("Please enter a link first.");
-        } else {
-          alert("Please enter a link first.");
-        }
-        return;
-      }
+    window.onload = function() {
+      generateQRCode();
 
-      // Clear existing QR code
-      qrContainer.innerHTML = "";
-
-      // Generate QR Code
-      qrcodeInstance = new QRCode(qrContainer, {
-        text: url,
-        width: 200,
-        height: 200,
-        colorDark: darkColor,
-        colorLight: lightColor,
-        correctLevel: QRCode.CorrectLevel.H
+      textInput.addEventListener('input', generateQRCode);
+      
+      fgColorInput.addEventListener('input', (e) => {
+        updateColorUI(e.target.value, fgHex, fgPreview);
+        generateQRCode();
       });
 
-      // Reveal download button
-      downloadBtn.style.display = "block";
+      bgColorInput.addEventListener('input', (e) => {
+        updateColorUI(e.target.value, bgHex, bgPreview);
+        generateQRCode();
+      });
+    };
+
+    function updateColorUI(hexValue, hexTextElement, previewElement) {
+      const upperHex = hexValue.toUpperCase();
+      hexTextElement.textContent = upperHex;
+      previewElement.style.backgroundColor = upperHex;
+    }
+
+    function setColors(fg, bg) {
+      fgColorInput.value = fg;
+      bgColorInput.value = bg;
+      updateColorUI(fg, fgHex, fgPreview);
+      updateColorUI(bg, bgHex, bgPreview);
+      generateQRCode();
+    }
+
+    function generateQRCode() {
+      const text = textInput.value.trim() || "https://elias.com";
+      qrContainer.innerHTML = "";
+
+      qrCodeInstance = new QRCode(qrContainer, {
+        text: text,
+        width: 180,
+        height: 180,
+        colorDark: fgColorInput.value,
+        colorLight: bgColorInput.value,
+        correctLevel: QRCode.CorrectLevel.H
+      });
     }
 
     function downloadQR() {
-      const canvas = document.querySelector("#qrcode canvas");
-      if (!canvas) return;
+      const canvas = qrContainer.querySelector('canvas');
+      const img = qrContainer.querySelector('img');
+      let imageSrc = "";
 
-      const imageUrl = canvas.toDataURL("image/png");
+      if (canvas) {
+        imageSrc = canvas.toDataURL("image/png");
+      } else if (img && img.src) {
+        imageSrc = img.src;
+      }
 
-      // Check if running inside Telegram WebApp
+      if (!imageSrc) {
+        showToast("Please enter a link first.");
+        return;
+      }
+
+      // Check for Telegram environment or mobile WebViews where direct downloads are blocked
       const isTelegram = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData;
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-      if (isTelegram) {
-        // Display image modal for long-press saving in Telegram
-        document.getElementById("modalQrImg").src = imageUrl;
-        document.getElementById("telegramModal").style.display = "flex";
+      if (isTelegram || isMobile) {
+        // Display modal with image for press-and-hold saving
+        modalQrImg.src = imageSrc;
+        saveModal.classList.remove('hidden');
+        saveModal.classList.add('flex');
       } else {
-        // Direct browser file download
-        const link = document.createElement("a");
-        link.download = "qrcode.png";
-        link.href = imageUrl;
+        // Direct browser file download on desktop
+        const link = document.createElement('a');
+        link.href = imageSrc;
+        link.download = `qrcode-${Date.now()}.png`;
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
+        showToast("Downloaded QR code successfully!");
       }
     }
 
     function closeModal() {
-      document.getElementById("telegramModal").style.display = "none";
+      saveModal.classList.add('hidden');
+      saveModal.classList.remove('flex');
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.remove('opacity-0');
+      toast.classList.add('opacity-100');
+      
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0');
+      }, 2500);
     }
   </script>
-
 </body>
 </html>
